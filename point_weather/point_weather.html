@@ -3,114 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>‚¨“V‹Cƒ`ƒFƒbƒJ[</title>
+    <title>å¤©æ°—äºˆå ±å–å¾—ãƒ„ãƒ¼ãƒ«</title>
     <style>
         body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
         .input-group { margin-bottom: 10px; }
-        label { display: inline-block; width: 80px; }
+        label { display: inline-block; width: 100px; }
+        button { padding: 5px 15px; cursor: pointer; }
+        .result-container { display: flex; gap: 20px; margin-top: 20px; }
         .weather-card {
             border: 1px solid #ccc;
             padding: 15px;
-            margin-top: 10px;
             border-radius: 8px;
+            width: 200px;
             background-color: #f9f9f9;
         }
-        h2 { color: #333; }
-        button { padding: 5px 15px; cursor: pointer; }
+        .day-title { font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>“V‹C—\•ñæ“¾ƒc[ƒ‹</h1>
+    <h2>å¤©æ°—äºˆå ±æ¤œç´¢</h2>
 
     <div class="input-group">
-        <label>’n–¼:</label>
-        <input type="text" id="locationName" placeholder="—áF“Œ‹">
+        <label>åœ°å:</label>
+        <input type="text" id="locationName" placeholder="ä¾‹ï¼šæ±äº¬">
     </div>
     <div class="input-group">
-        <label>ˆÜ“x:</label>
+        <label>ç·¯åº¦:</label>
         <input type="number" id="lat" step="0.01" value="35.6895">
     </div>
     <div class="input-group">
-        <label>Œo“x:</label>
-        <input type="number" id="lon" step="0.01" value="139.6917">
+        <label>çµŒåº¦:</label>
+        <input type="number" id="lng" step="0.01" value="139.6917">
     </div>
-    <button onclick="getWeather()">“V‹C‚ğŠm”F‚·‚é</button>
+    <button onclick="getWeather()">å¤©æ°—è¡¨ç¤º</button>
 
-    <hr>
+    <h3 id="displayLocation">---</h3>
 
-    <h2 id="displayTitle">’n“_–¼: ---</h2>
+    <div class="result-container">
+        <div id="today-weather" class="weather-card">
+            <div class="day-title">ä»Šæ—¥</div>
+            <p>å¤©æ°—: <span id="t-condition">-</span></p>
+            <p>æœ€é«˜: <span id="t-max">-</span>â„ƒ</p>
+            <p>æœ€ä½: <span id="t-min">-</span>â„ƒ</p>
+        </div>
 
-    <div id="todayWeather" class="weather-card">
-        <h3>¡“ú‚Ì“V‹C</h3>
-        <p id="todayStatus">“V‹C: --</p>
-        <p id="todayMax">Å‚‹C‰·: -- </p>
-        <p id="todayMin">Å’á‹C‰·: -- </p>
-    </div>
-
-    <div id="tomorrowWeather" class="weather-card">
-        <h3>–¾“ú‚Ì“V‹C</h3>
-        <p id="tomorrowStatus">“V‹C: --</p>
-        <p id="tomorrowMax">Å‚‹C‰·: -- </p>
-        <p id="tomorrowMin">Å’á‹C‰·: -- </p>
+        <div id="tomorrow-weather" class="weather-card">
+            <div class="day-title">æ˜æ—¥</div>
+            <p>å¤©æ°—: <span id="tm-condition">-</span></p>
+            <p>æœ€é«˜: <span id="tm-max">-</span>â„ƒ</p>
+            <p>æœ€ä½: <span id="tm-min">-</span>â„ƒ</p>
+        </div>
     </div>
 
     <script>
         /**
-         * WMO“V‹CƒR[ƒh‚ğ“ú–{Œê‚Ì•¶š—ñ‚É•ÏŠ·‚·‚éŠÖ”
-         * Open-Meteo‚Í“V‹C‚ğ”’l(0-99)‚Å•Ô‚·‚½‚ßA•ÏŠ·‚ª•K—v‚Å‚·
+         * Open-Meteoã®WMOå¤©æ°—ã‚³ãƒ¼ãƒ‰ã‚’æ—¥æœ¬èªã®åç§°ã«å¤‰æ›ã™ã‚‹é–¢æ•°
+         * @param {number} code å¤©æ°—ã‚³ãƒ¼ãƒ‰
          */
-        function translateWeatherCode(code) {
-            const codes = {
-                0: "‰õ°", 1: "°‚ê", 2: "‚Æ‚«‚Ç‚«“Ü‚è", 3: "“Ü‚è",
-                45: "–¶", 48: "–¶", 51: "¬‰J", 53: "‰J", 55: "‹­‚¢‰J",
-                61: "¬‰J", 63: "‰J", 65: "Œƒ‚µ‚¢‰J",
-                71: "¬á", 73: "á", 75: "‹­‚¢á",
-                80: "‚É‚í‚©‰J", 81: "‚É‚í‚©‰J", 82: "Œƒ‚µ‚¢‚É‚í‚©‰J",
-                95: "—‹‰J"
+        function getWeatherText(code) {
+            const weatherCodes = {
+                0: "å¿«æ™´", 1: "æ™´ã‚Œ", 2: "æ™‚ã€…æ›‡ã‚Š", 3: "æ›‡ã‚Š",
+                45: "éœ§", 48: "éœ§æ°·",
+                51: "å°é›¨", 53: "é›¨", 55: "å¼·ã„é›¨",
+                61: "å°é›¨", 63: "é›¨", 65: "æ¿€ã—ã„é›¨",
+                71: "å°é›ª", 73: "é›ª", 75: "æ¿€ã—ã„é›ª",
+                80: "ã«ã‚ã‹é›¨", 81: "é›¨", 82: "æ¿€ã—ã„ã«ã‚ã‹é›¨",
+                95: "é›·é›¨"
             };
-            return codes[code] || "•s–¾ (" + code + ")";
+            return weatherCodes[code] || "ä¸æ˜";
         }
 
         /**
-         * ƒƒCƒ“‚Ì“V‹Cæ“¾ˆ—
+         * APIã‹ã‚‰å¤©æ°—ã‚’å–å¾—ã™ã‚‹ãƒ¡ã‚¤ãƒ³é–¢æ•°
          */
         async function getWeather() {
-            // 1. “ü—Í’l‚ğæ“¾
-            const name = document.getElementById('locationName').value || "w’è’n“_";
+            // 1. å…¥åŠ›å€¤ã®å–å¾—
             const lat = document.getElementById('lat').value;
-            const lon = document.getElementById('lon').value;
+            const lng = document.getElementById('lng').value;
+            const locName = document.getElementById('locationName').value || "æŒ‡å®šã•ã‚ŒãŸå ´æ‰€";
 
-            // •\¦–¼‚ÌXV
-            document.getElementById('displayTitle').innerText = `’n“_–¼: ${name}`;
-
-            // 2. Open-Meteo API‚ÌURL\’z
-            // dailyƒpƒ‰ƒ[ƒ^‚ÅA“V‹CƒR[ƒh(weather_code)AÅ‚‹C‰·(temperature_2m_max)AÅ’á‹C‰·(temperature_2m_min)‚ğ—v‹
-            // timezone‚ğauto‚É‚·‚é‚±‚Æ‚ÅA’nˆæ‚ÌŠÔ‚É‡‚í‚¹‚Ü‚·
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+            // 2. Open-Meteo APIã®URLæ§‹ç¯‰
+            // dailyãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã§æœ€é«˜æ°—æ¸©ã€æœ€ä½æ°—æ¸©ã€å¤©æ°—ã‚³ãƒ¼ãƒ‰ã‚’æŒ‡å®š
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
 
             try {
-                // 3. API’ÊMŠJn
+                // 3. APIãƒªã‚¯ã‚¨ã‚¹ãƒˆã®é€ä¿¡
                 const response = await fetch(url);
                 const data = await response.json();
 
-                // 4. ƒf[ƒ^‚Ì’Šo (ƒCƒ“ƒfƒbƒNƒX0‚ª¡“úA1‚ª–¾“ú)
-                const daily = data.daily;
+                // 4. åœ°åã®è¡¨ç¤ºæ›´æ–°
+                document.getElementById('displayLocation').innerText = `${locName}ã®å¤©æ°—`;
 
-                // ¡“ú‚Ìƒf[ƒ^
-                document.getElementById('todayStatus').innerText = "“V‹C: " + translateWeatherCode(daily.weather_code[0]);
-                document.getElementById('todayMax').innerText = "Å‚‹C‰·: " + daily.temperature_2m_max[0] + " ";
-                document.getElementById('todayMin').innerText = "Å’á‹C‰·: " + daily.temperature_2m_min[0] + " ";
+                // 5. ä»Šæ—¥ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤º (é…åˆ—ã®0ç•ªç›®)
+                document.getElementById('t-condition').innerText = getWeatherText(data.daily.weathercode[0]);
+                document.getElementById('t-max').innerText = data.daily.temperature_2m_max[0];
+                document.getElementById('t-min').innerText = data.daily.temperature_2m_min[0];
 
-                // –¾“ú‚Ìƒf[ƒ^
-                document.getElementById('tomorrowStatus').innerText = "“V‹C: " + translateWeatherCode(daily.weather_code[1]);
-                document.getElementById('tomorrowMax').innerText = "Å‚‹C‰·: " + daily.temperature_2m_max[1] + " ";
-                document.getElementById('tomorrowMin').innerText = "Å’á‹C‰·: " + daily.temperature_2m_min[1] + " ";
+                // 6. æ˜æ—¥ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤º (é…åˆ—ã®1ç•ªç›®)
+                document.getElementById('tm-condition').innerText = getWeatherText(data.daily.weathercode[1]);
+                document.getElementById('tm-max').innerText = data.daily.temperature_2m_max[1];
+                document.getElementById('tm-min').innerText = data.daily.temperature_2m_min[1];
 
             } catch (error) {
-                // ƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
-                console.error("ƒf[ƒ^æ“¾¸”s:", error);
-                alert("ƒf[ƒ^‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½BˆÜ“xEŒo“x‚ª³‚µ‚¢‚©Šm”F‚µ‚Ä‚­‚¾‚³‚¢B");
+                console.error("ãƒ‡ãƒ¼ã‚¿ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ:", error);
+                alert("ãƒ‡ãƒ¼ã‚¿ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸã€‚ç·¯åº¦ãƒ»çµŒåº¦ãŒæ­£ã—ã„ã‹ç¢ºèªã—ã¦ãã ã•ã„ã€‚");
             }
         }
     </script>
