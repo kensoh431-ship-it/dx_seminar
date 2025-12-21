@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お天気チェッカー</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .input-group { margin-bottom: 10px; }
+        label { display: inline-block; width: 80px; }
+        .weather-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h2 { color: #333; }
+        button { padding: 5px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>天気予報取得ツール</h1>
+
+    <div class="input-group">
+        <label>地名:</label>
+        <input type="text" id="locationName" placeholder="例：東京">
+    </div>
+    <div class="input-group">
+        <label>緯度:</label>
+        <input type="number" id="lat" step="0.01" value="35.6895">
+    </div>
+    <div class="input-group">
+        <label>経度:</label>
+        <input type="number" id="lon" step="0.01" value="139.6917">
+    </div>
+    <button onclick="getWeather()">天気を確認する</button>
+
+    <hr>
+
+    <h2 id="displayTitle">地点名: ---</h2>
+
+    <div id="todayWeather" class="weather-card">
+        <h3>今日の天気</h3>
+        <p id="todayStatus">天気: --</p>
+        <p id="todayMax">最高気温: -- ℃</p>
+        <p id="todayMin">最低気温: -- ℃</p>
+    </div>
+
+    <div id="tomorrowWeather" class="weather-card">
+        <h3>明日の天気</h3>
+        <p id="tomorrowStatus">天気: --</p>
+        <p id="tomorrowMax">最高気温: -- ℃</p>
+        <p id="tomorrowMin">最低気温: -- ℃</p>
+    </div>
+
+    <script>
+        /**
+         * WMO天気コードを日本語の文字列に変換する関数
+         * Open-Meteoは天気を数値(0-99)で返すため、変換が必要です
+         */
+        function translateWeatherCode(code) {
+            const codes = {
+                0: "快晴", 1: "晴れ", 2: "ときどき曇り", 3: "曇り",
+                45: "霧", 48: "霧", 51: "小雨", 53: "雨", 55: "強い雨",
+                61: "小雨", 63: "雨", 65: "激しい雨",
+                71: "小雪", 73: "雪", 75: "強い雪",
+                80: "にわか雨", 81: "にわか雨", 82: "激しいにわか雨",
+                95: "雷雨"
+            };
+            return codes[code] || "不明 (" + code + ")";
+        }
+
+        /**
+         * メインの天気取得処理
+         */
+        async function getWeather() {
+            // 1. 入力値を取得
+            const name = document.getElementById('locationName').value || "指定地点";
+            const lat = document.getElementById('lat').value;
+            const lon = document.getElementById('lon').value;
+
+            // 表示名の更新
+            document.getElementById('displayTitle').innerText = `地点名: ${name}`;
+
+            // 2. Open-Meteo APIのURL構築
+            // dailyパラメータで、天気コード(weather_code)、最高気温(temperature_2m_max)、最低気温(temperature_2m_min)を要求
+            // timezoneをautoにすることで、地域の時間に合わせます
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+
+            try {
+                // 3. API通信開始
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // 4. データの抽出 (インデックス0が今日、1が明日)
+                const daily = data.daily;
+
+                // 今日のデータ
+                document.getElementById('todayStatus').innerText = "天気: " + translateWeatherCode(daily.weather_code[0]);
+                document.getElementById('todayMax').innerText = "最高気温: " + daily.temperature_2m_max[0] + " ℃";
+                document.getElementById('todayMin').innerText = "最低気温: " + daily.temperature_2m_min[0] + " ℃";
+
+                // 明日のデータ
+                document.getElementById('tomorrowStatus').innerText = "天気: " + translateWeatherCode(daily.weather_code[1]);
+                document.getElementById('tomorrowMax').innerText = "最高気温: " + daily.temperature_2m_max[1] + " ℃";
+                document.getElementById('tomorrowMin').innerText = "最低気温: " + daily.temperature_2m_min[1] + " ℃";
+
+            } catch (error) {
+                // エラーハンドリング
+                console.error("データ取得失敗:", error);
+                alert("データの取得に失敗しました。緯度・経度が正しいか確認してください。");
+            }
+        }
+    </script>
+</body>
+</html>
