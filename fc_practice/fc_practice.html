@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>AIチャットボット</title>
+
+    <!-- CSS読み込み -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <header>
+        <h1>ファンクションコーリング</h1>
+    </header>
+    <main>
+        <div id="response">
+            AIからの回答が表示されます
+        </div>
+        <div id="input-history">
+            入力したメッセージが表示されます
+        </div>
+        <textarea id="user-input" placeholder="メッセージを入力..."></textarea>
+        <ul>
+            <li id="send">送信</li>
+        </ul>
+    </main>
+
+    <!-- jQuery読み込み -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
