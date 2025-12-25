@@ -1,24 +1,62 @@
 /* インデックスのCSS */
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
     text-align: center;
+    background-color: #f8f9fa; /* 薄いグレーで背景を落ち着かせる */
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
 h1 {
     font-size: 28px;
-    margin-top: 30px;
+    margin-top: 50px;
     margin-bottom: 30px;
+    letter-spacing: 1px;
 }
 
 .main-frame {
     display: flex;
+    flex-direction: column; /* リンクを縦に並べる */
+    gap: 20px;              /* 要素間の隙間を作る */
     justify-content: center;
     align-items: center;
-    height: 200px;
-    width: 400px;
-    background-color: rgb(236, 236, 236);
+    
+    /* サイズ調整 */
+    min-height: 250px;
+    width: 90%;
+    max-width: 500px;
     margin: 0 auto;
-    font-size: 20px;
-    color: blue;
+    padding: 20px;
+
+    /* 装飾：シンプルで清潔感のあるカード風 */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* リンクをボタンのように見せる */
+.main-frame p {
+    margin: 0;
+    width: 100%;
+}
+
+.main-frame a {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #007bff; /* 信頼感のある青 */
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: all 0.3s ease; /* アニメーション */
+}
+
+/* ホバー時の挙動 */
+.main-frame a:hover {
+    background-color: #007bff;
+    color: #ffffff;
+    transform: translateY(-2px); /* 少し浮き上がる */
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
 }
