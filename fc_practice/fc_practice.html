@@ -34,7 +34,7 @@
             "imports": {
                 "@google/generative-ai": "https://esm.run/@google/generative-ai"
             }
-        }    
+        }
     </script>
 
     <script type="module">
@@ -42,12 +42,7 @@
         import { GEMINI_API_KEY } from './js/config.js';
 
         // @google/genai ライブラリを読み込む
-        import { GoogleGenAI } from '@google/generative-ai';
-
-        // @google/genai ライブラリを初期化
-        const genAI = new GoogleGenAI(GEMINI_API_KEY);
-
-        // --- 1. Geminiに提供する「ツール（関数）」の定義 ---
+        import { GoogleGenerativeAI } from "@google/generative-ai";
 
         /**
          * NominatimとOpen-Meteoを使用して天気を取得する関数
@@ -55,6 +50,7 @@
          */
         async function fetchWeather(location) {
             try {
+                console.log("Function Calling 開始");
                 // ステップ1: 地名から座標を取得 (Nominatim API)
                 const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`;
                 const geoResp = await fetch(geoUrl, { headers: { 'User-Agent': 'MyWeatherApp/1.0' } });
@@ -104,8 +100,6 @@
             return weatherCodes[code] || "不明";
         }
 
-        // --- 2. Gemini API の設定 ---
-
         // 利用可能な関数を定義
         const tools = [
             {
@@ -129,6 +123,7 @@
         ];
 
         // モデルの初期化（ツールを組み込む）
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({
             model: 'gemini-2.5-flash',
             tools: tools,
@@ -136,8 +131,6 @@
 
         // チャットセッションの開始
         let chat = model.startChat();
-
-        // --- 3. イベントハンドラとAPI実行 ---
 
         $('#send').on('click', async function () {
             const userMessage = $('#user-input').val();

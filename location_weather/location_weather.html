@@ -1,177 +1,168 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地名から天気予報取得ツール</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; line-height: 1.6; color: #333; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-
-        .coordinate-display { 
-            display: flex; gap: 10px; margin-top: 15px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em;
-        }
-        .coordinate-display div { flex: 1; }
-
-        .result-container { display: flex; gap: 15px; margin-top: 20px; }
-        .weather-card {
-            flex: 1; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #fff; text-align: center;
-        }
-        .day-title { font-weight: bold; border-bottom: 2px solid #007bff; margin-bottom: 10px; padding-bottom: 5px; color: #007bff; }
-        .temp-max { color: #d9534f; font-weight: bold; } /* 最高気温は赤系 */
-        .temp-min { color: #0275d8; font-weight: bold; } /* 最低気温は青系 */
-        
-        #displayLocation { text-align: center; margin-top: 20px; color: #555; }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<div class="container">
-    <h2>お天気検索ツール</h2>
+    <div class="container">
+        <h2>お天気検索ツール</h2>
 
-    <div class="input-group">
-        <label for="address">地名・住所を入力:</label>
-        <input type="text" id="address" placeholder="例: 東京都新宿区">
-    </div>
-
-    <button onclick="updateWeatherByLocation()">天気を確認する</button>
-
-    <div class="coordinate-display">
-        <div><strong>緯度:</strong> <span id="lat">---</span></div>
-        <div><strong>経度:</strong> <span id="lon">---</span></div>
-    </div>
-
-    <h3 id="displayLocation">場所を検索してください</h3>
-
-    <div class="result-container">
-        <div id="today-weather" class="weather-card">
-            <div class="day-title">今日</div>
-            <p>天気: <span id="t-condition">-</span></p>
-            <p>最高: <span id="t-max" class="temp-max">-</span>℃</p>
-            <p>最低: <span id="t-min" class="temp-min">-</span>℃</p>
+        <div class="input-group">
+            <label for="address">地名・住所を入力:</label>
+            <input type="text" id="address" placeholder="例: 東京都新宿区">
         </div>
 
-        <div id="tomorrow-weather" class="weather-card">
-            <div class="day-title">明日</div>
-            <p>天気: <span id="tm-condition">-</span></p>
-            <p>最高: <span id="tm-max" class="temp-max">-</span>℃</p>
-            <p>最低: <span id="tm-min" class="temp-min">-</span>℃</p>
+        <button id="btn-search">天気を確認する</button>
+
+        <div class="coordinate-display">
+            <div><strong>緯度:</strong> <span id="lat">---</span></div>
+            <div><strong>経度:</strong> <span id="lon">---</span></div>
+        </div>
+
+        <h3 id="displayLocation">場所を検索してください</h3>
+
+        <div class="result-container">
+            <div id="today-weather" class="weather-card">
+                <div class="day-title">今日</div>
+                <p>天気: <span id="t-condition">-</span></p>
+                <p>最高: <span id="t-max" class="temp-max">-</span>℃</p>
+                <p>最低: <span id="t-min" class="temp-min">-</span>℃</p>
+            </div>
+
+            <div id="tomorrow-weather" class="weather-card">
+                <div class="day-title">明日</div>
+                <p>天気: <span id="tm-condition">-</span></p>
+                <p>最高: <span id="tm-max" class="temp-max">-</span>℃</p>
+                <p>最低: <span id="tm-min" class="temp-min">-</span>℃</p>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    /**
-     * ボタンクリック時に実行されるメイン関数
-     * 1. 地名から座標を取得
-     * 2. その座標を使って天気を取得
-     */
-    async function updateWeatherByLocation() {
-        const address = document.getElementById('address').value;
-        if (!address) {
-            alert("地名を入力してください");
-            return;
-        }
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-        // 検索中の表示
-        document.getElementById('displayLocation').innerText = "検索中...";
+    <script>
+        /**
+         * jQueryの基本: $(function() { ... })
+         * これはHTMLの読み込み（DOMの構築）が完了してから実行されるという意味です。
+         */
+        $(function () {
 
-        // ステップ1: 地名から座標を取得
-        const coords = await getCoordinates(address);
-        
-        if (coords) {
-            // ステップ2: 取得した座標（coords.lat, coords.lon）を使って天気を取得
-            await getWeather(coords.lat, coords.lon, address);
-        }
-    }
-
-    /**
-     * Nominatim APIを使用して地名から緯度経度を取得する
-     */
-    async function getCoordinates(address) {
-        const latDiv = document.getElementById('lat');
-        const lonDiv = document.getElementById('lon');
-
-        try {
-            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
-            const response = await fetch(url, {
-                headers: { 'User-Agent': 'MyWeatherApp/1.0' }
+            // 1. ボタンクリックイベントの設定
+            // id="btn-search" の要素がクリックされた時に実行します
+            $('#btn-search').on('click', function () {
+                updateWeatherByLocation();
             });
-            const data = await response.json();
 
-            if (data && data.length > 0) {
-                const lat = data[0].lat;
-                const lon = data[0].lon;
-                
-                // 画面に緯度経度を表示
-                latDiv.innerText = lat;
-                lonDiv.innerText = lon;
-                
-                return { lat, lon }; // 次の処理のために値を返す
-            } else {
-                alert("場所が見つかりませんでした。");
-                latDiv.innerText = "---";
-                lonDiv.innerText = "---";
-                return null;
+            // メイン処理の関数
+            async function updateWeatherByLocation() {
+                // val() は入力フォームの値を取得するjQueryメソッドです
+                const address = $('#address').val();
+
+                if (!address) {
+                    alert("地名を入力してください");
+                    return;
+                }
+
+                // text() は要素内のテキストを書き換えるjQueryメソッドです
+                $('#displayLocation').text("検索中...");
+
+                // ステップ1: 座標取得
+                const coords = await getCoordinates(address);
+
+                if (coords) {
+                    // ステップ2: 天気取得
+                    await getWeather(coords.lat, coords.lon, address);
+                }
             }
-        } catch (error) {
-            console.error("座標取得エラー:", error);
-            return null;
-        }
-    }
 
-    /**
-     * Open-Meteo APIを使用して天気情報を取得・表示する
-     */
-    async function getWeather(lat, lon, locName) {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
+            /**
+             * 地名から緯度経度を取得
+             */
+            async function getCoordinates(address) {
+                try {
+                    // jQueryの $.getJSON を使うと fetch よりも簡潔に書ける場合があります
+                    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
+                    // Ajaxリクエストの実行
+                    const data = await $.ajax({
+                        url: url,
+                        method: 'GET',
+                        headers: { 'User-Agent': 'MyWeatherApp/1.0' }
+                    });
 
-            // 地名表示の更新
-            document.getElementById('displayLocation').innerText = `${locName}の天気`;
+                    if (data && data.length > 0) {
+                        const lat = data[0].lat;
+                        const lon = data[0].lon;
 
-            // 今日のデータを表示 (配列の0番目)
-            document.getElementById('t-condition').innerText = getWeatherText(data.daily.weathercode[0]);
-            document.getElementById('t-max').innerText = data.daily.temperature_2m_max[0];
-            document.getElementById('t-min').innerText = data.daily.temperature_2m_min[0];
+                        // jQueryなら複数の要素更新もスッキリ書けます
+                        $('#lat').text(lat);
+                        $('#lon').text(lon);
 
-            // 明日のデータを表示 (配列の1番目)
-            document.getElementById('tm-condition').innerText = getWeatherText(data.daily.weathercode[1]);
-            document.getElementById('tm-max').innerText = data.daily.temperature_2m_max[1];
-            document.getElementById('tm-min').innerText = data.daily.temperature_2m_min[1];
+                        return { lat, lon };
+                    } else {
+                        alert("場所が見つかりませんでした。");
+                        $('#lat, #lon').text("---"); // まとめて変更可能
+                        return null;
+                    }
+                } catch (error) {
+                    console.error("座標取得エラー:", error);
+                    return null;
+                }
+            }
 
-        } catch (error) {
-            console.error("天気取得エラー:", error);
-            alert("天気情報の取得に失敗しました。");
-        }
-    }
+            /**
+             * 天気情報を取得・表示
+             */
+            async function getWeather(lat, lon, locName) {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
 
-    /**
-     * 天気コードを日本語に変換する
-     */
-    function getWeatherText(code) {
-        const weatherCodes = {
-            0: "快晴", 1: "晴れ", 2: "時々曇り", 3: "曇り",
-            45: "霧", 48: "霧氷",
-            51: "小雨", 53: "雨", 55: "強い雨",
-            61: "小雨", 63: "雨", 65: "激しい雨",
-            71: "小雪", 73: "雪", 75: "激しい雪",
-            80: "にわか雨", 81: "雨", 82: "激しいにわか雨",
-            95: "雷雨"
-        };
-        return weatherCodes[code] || "不明";
-    }
-</script>
+                try {
+                    const data = await $.getJSON(url); // JSON取得に特化したjQueryメソッド
+
+                    // 地名表示の更新
+                    $('#displayLocation').text(`${locName}の天気`);
+
+                    // 今日のデータ表示
+                    // text() メソッドに値を渡して表示を更新します
+                    $('#t-condition').text(getWeatherText(data.daily.weathercode[0]));
+                    $('#t-max').text(data.daily.temperature_2m_max[0]);
+                    $('#t-min').text(data.daily.temperature_2m_min[0]);
+
+                    // 明日のデータ表示
+                    $('#tm-condition').text(getWeatherText(data.daily.weathercode[1]));
+                    $('#tm-max').text(data.daily.temperature_2m_max[1]);
+                    $('#tm-min').text(data.daily.temperature_2m_min[1]);
+
+                } catch (error) {
+                    console.error("天気取得エラー:", error);
+                    alert("天気情報の取得に失敗しました。");
+                }
+            }
+
+            /**
+             * 天気コード変換（ロジック部分は共通）
+             */
+            function getWeatherText(code) {
+                const weatherCodes = {
+                    0: "快晴", 1: "晴れ", 2: "時々曇り", 3: "曇り",
+                    45: "霧", 48: "霧氷",
+                    51: "小雨", 53: "雨", 55: "強い雨",
+                    61: "小雨", 63: "雨", 65: "激しい雨",
+                    71: "小雪", 73: "雪", 75: "激しい雪",
+                    80: "にわか雨", 81: "雨", 82: "激しいにわか雨",
+                    95: "雷雨"
+                };
+                return weatherCodes[code] || "不明";
+            }
+        });
+    </script>
 
 </body>
+
 </html>

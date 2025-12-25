@@ -1,0 +1,78 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    /* デフォルトのマージンをリセット */
+    line-height: 1.6;
+    display: flex;
+    /* flexboxを使用して全体を中央寄せ */
+    flex-direction: column;
+    align-items: center;
+    /* 水平方向の中央寄せ */
+    min-height: 100vh;
+    /* 画面の高さ分を確保 */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 入力フォーム部分を中央に配置するためのラッパー */
+form,
+.input-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 10px;
+    display: flex;
+    /* ラベルとインプットを並べる */
+    justify-content: center;
+    align-items: center;
+}
+
+label {
+    display: inline-block;
+    width: 100px;
+    text-align: right;
+    /* ラベルを右寄せにすると入力欄と綺麗に並びます */
+    margin-right: 10px;
+}
+
+button {
+    padding: 5px 25px;
+    /* 少し横幅を広げて安定感を */
+    cursor: pointer;
+    display: block;
+    /* ボタン単体で中央寄せにするため */
+    margin: 10px auto;
+}
+
+.result-container {
+    display: flex;
+    flex-wrap: wrap;
+    /* 画面幅が狭い時に折り返すように設定 */
+    justify-content: center;
+    /* カード群を中央寄せ */
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 1200px;
+    /* 広がりすぎないよう制限 */
+}
+
+.weather-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* 視認性を高める影を追加 */
+}
+
+.day-title {
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+    text-align: center;
+    /* タイトルも中央へ */
+}

@@ -1,95 +1,104 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地名から緯度・経度を取得</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
-        .container { max-width: 400px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        input[type="text"] { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .result { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
-        .label { font-weight: bold; color: #555; }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<div class="container">
-    <h2>座標取得ツール</h2>
-    
-    <label for="address">地名・住所を入力:</label>
-    <input type="text" id="address" placeholder="例: 東京タワー">
+    <div class="container">
+        <h2>座標取得ツール</h2>
 
-    <button onclick="getCoordinates()">座標を取得する</button>
+        <label for="address">地名・住所を入力:</label>
+        <input type="text" id="address" placeholder="例: 東京タワー">
 
-    <div class="result">
-        <div><span class="label">緯度:</span> <span id="lat">---</span></div>
-        <div><span class="label">経度:</span> <span id="lon">---</span></div>
+        <button id="get-coords-btn">座標を取得する</button>
+
+        <div class="result">
+            <div><span class="label">緯度:</span> <span id="lat">---</span></div>
+            <div><span class="label">経度:</span> <span id="lon">---</span></div>
+        </div>
     </div>
-</div>
 
-<script>
-    /**
-     * APIを使用して緯度・経度を取得するメイン関数
-     */
-    async function getCoordinates() {
-        // 1. 入力値を取得
-        const address = document.getElementById('address').value;
-        const latDiv = document.getElementById('lat');
-        const lonDiv = document.getElementById('lon');
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-        // 入力が空の場合は処理を中断
-        if (!address) {
-            alert("地名を入力してください");
-            return;
-        }
-
-        // 表示を「検索中...」に更新
-        latDiv.innerText = "取得中...";
-        lonDiv.innerText = "取得中...";
-
-        try {
+    <script>
+        $(function () {
             /**
-             * 2. APIリクエストの作成
-             * OpenStreetMapのNominatim APIを使用します。
-             * q: 検索クエリ
-             * format: レスポンス形式（jsonを指定）
+             * jQueryの「$(function() { ... });」は、HTMLの読み込みが
+             * 完了した後に実行されることを保証するおまじないです。
              */
-            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
 
-            // 3. fetch関数でAPIを呼び出す
-            const response = await fetch(url, {
-                headers: {
-                    // Nominatimの利用規約に基づき、User-Agentを設定することが推奨されています
-                    'User-Agent': 'MyGeocodingApp/1.0'
+            // ボタンクリック時のイベントを設定
+            $('#get-coords-btn').on('click', function () {
+
+                // 1. 入力値の取得
+                // jQueryの val() メソッドで入力フォームの値を取得します
+                const address = $('#address').val().trim();
+
+                // 表示更新用に対象の要素をjQueryオブジェクトとして変数に格納
+                const $latDiv = $('#lat');
+                const $lonDiv = $('#lon');
+
+                // 入力チェック
+                if (!address) {
+                    alert("地名を入力してください");
+                    return;
                 }
+
+                // 状態の初期化
+                $latDiv.text("取得中...");
+                $lonDiv.text("取得中...");
+
+                /**
+                 * 2. jQueryのAjax機能を使用してAPIリクエストを送信
+                 * fetchよりも古いブラウザへの対応が容易で、書き方も直感的です。
+                 */
+                $.ajax({
+                    url: 'https://nominatim.openstreetmap.org/search',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        q: address,      // jQueryが自動でURLエンコードしてくれます
+                        format: 'json',
+                        limit: 1
+                    },
+                    headers: {
+                        // 利用規約に基づくUser-Agentの設定
+                        'User-Agent': 'MyGeocodingApp/1.0'
+                    }
+                })
+                    .done(function (data) {
+                        /**
+                         * .done は通信成功時に呼ばれます。
+                         * dataには既に解析済みのJSONオブジェクトが入っています。
+                         */
+                        if (data && data.length > 0) {
+                            // データの表示（textメソッドで安全に書き換え）
+                            $latDiv.text(data[0].lat);
+                            $lonDiv.text(data[0].lon);
+                        } else {
+                            $latDiv.text("見つかりませんでした");
+                            $lonDiv.text("見つかりませんでした");
+                        }
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        /**
+                         * .fail は通信失敗時やエラー時に呼ばれます。
+                         */
+                        console.error("エラー詳細:", textStatus, errorThrown);
+                        alert("データの取得に失敗しました。");
+                        $latDiv.text("エラー");
+                        $lonDiv.text("エラー");
+                    });
             });
-
-            // 4. JSONデータを解析
-            const data = await response.json();
-
-            // 5. 結果の判定と表示
-            if (data && data.length > 0) {
-                // APIは配列で結果を返すため、最初の要素（[0]）を取得
-                latDiv.innerText = data[0].lat;
-                lonDiv.innerText = data[0].lon;
-            } else {
-                // 見つからなかった場合
-                latDiv.innerText = "見つかりませんでした";
-                lonDiv.innerText = "見つかりませんでした";
-            }
-
-        } catch (error) {
-            // 通信エラーなどのハンドリング
-            console.error("エラーが発生しました:", error);
-            alert("データの取得に失敗しました。");
-            latDiv.innerText = "エラー";
-            lonDiv.innerText = "エラー";
-        }
-    }
-</script>
+        });
+    </script>
 
 </body>
+
 </html>

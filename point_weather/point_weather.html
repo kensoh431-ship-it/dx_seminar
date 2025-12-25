@@ -1,33 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天気予報取得ツール</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
-        .input-group { margin-bottom: 10px; }
-        label { display: inline-block; width: 100px; }
-        button { padding: 5px 15px; cursor: pointer; }
-        .result-container { display: flex; gap: 20px; margin-top: 20px; }
-        .weather-card {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 8px;
-            width: 200px;
-            background-color: #f9f9f9;
-        }
-        .day-title { font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
     <h2>天気予報検索</h2>
 
-    <div class="input-group">
-        <label>地名:</label>
-        <input type="text" id="locationName" placeholder="例：東京">
-    </div>
     <div class="input-group">
         <label>緯度:</label>
         <input type="number" id="lat" step="0.01" value="35.6895">
@@ -36,9 +20,7 @@
         <label>経度:</label>
         <input type="number" id="lng" step="0.01" value="139.6917">
     </div>
-    <button onclick="getWeather()">天気表示</button>
-
-    <h3 id="displayLocation">---</h3>
+    <button id="btn-get-weather">天気表示</button>
 
     <div class="result-container">
         <div id="today-weather" class="weather-card">
@@ -56,13 +38,17 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <script>
         /**
-         * Open-MeteoのWMO天気コードを日本語の名称に変換する関数
-         * @param {number} code 天気コード
+         * 1. ページ読み込み完了後に実行される処理 (jQueryの基本)
+         * $(function() { ... }) は document.ready の短縮形です。
          */
-        function getWeatherText(code) {
-            const weatherCodes = {
+        $(function () {
+
+            // 天気コードを名称に変換する定数
+            const WEATHER_MAP = {
                 0: "快晴", 1: "晴れ", 2: "時々曇り", 3: "曇り",
                 45: "霧", 48: "霧氷",
                 51: "小雨", 53: "雨", 55: "強い雨",
@@ -71,45 +57,65 @@
                 80: "にわか雨", 81: "雨", 82: "激しいにわか雨",
                 95: "雷雨"
             };
-            return weatherCodes[code] || "不明";
-        }
 
-        /**
-         * APIから天気を取得するメイン関数
-         */
-        async function getWeather() {
-            // 1. 入力値の取得
-            const lat = document.getElementById('lat').value;
-            const lng = document.getElementById('lng').value;
-            const locName = document.getElementById('locationName').value || "指定された場所";
+            /**
+             * 2. ボタンクリックイベントの設定
+             * HTMLに onclick を書く代わりに、idに対してクリック時の動きを紐付けます。
+             */
+            $('#btn-get-weather').on('click', function () {
+                getWeather();
+            });
 
-            // 2. Open-Meteo APIのURL構築
-            // dailyパラメータで最高気温、最低気温、天気コードを指定
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
+            /**
+             * 3. APIから天気を取得する関数
+             */
+            function getWeather() {
+                // jQueryの val() を使って入力値を取得
+                const lat = $('#lat').val();
+                const lng = $('#lng').val();
+                const locName = $('#locationName').val() || "指定された場所";
 
-            try {
-                // 3. APIリクエストの送信
-                const response = await fetch(url);
-                const data = await response.json();
+                // APIのURL構築
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
 
-                // 4. 地名の表示更新
-                document.getElementById('displayLocation').innerText = `${locName}の天気`;
-
-                // 5. 今日のデータを表示 (配列の0番目)
-                document.getElementById('t-condition').innerText = getWeatherText(data.daily.weathercode[0]);
-                document.getElementById('t-max').innerText = data.daily.temperature_2m_max[0];
-                document.getElementById('t-min').innerText = data.daily.temperature_2m_min[0];
-
-                // 6. 明日のデータを表示 (配列の1番目)
-                document.getElementById('tm-condition').innerText = getWeatherText(data.daily.weathercode[1]);
-                document.getElementById('tm-max').innerText = data.daily.temperature_2m_max[1];
-                document.getElementById('tm-min').innerText = data.daily.temperature_2m_min[1];
-
-            } catch (error) {
-                console.error("データの取得に失敗しました:", error);
-                alert("データの取得に失敗しました。緯度・経度が正しいか確認してください。");
+                /**
+                 * 4. jQuery.ajax() を使った非同期通信
+                 * fetchより多機能で、古いブラウザの互換性も吸収してくれます。
+                 */
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    dataType: 'json',
+                })
+                    .done(function (data) {
+                        // 通信成功時の処理
+                        updateDisplay(locName, data);
+                    })
+                    .fail(function (error) {
+                        // 通信失敗時の処理
+                        console.error("データの取得に失敗しました:", error);
+                        alert("データの取得に失敗しました。緯度・経度が正しいか確認してください。");
+                    });
             }
-        }
+
+            /**
+             * 5. 画面表示を更新する関数
+             * jQueryの text() メソッドを使って中身を書き換えます。
+             */
+            function updateDisplay(locName, data) {
+                // 今日のデータ表示 (配列の0番目)
+                const today = data.daily;
+                $('#t-condition').text(WEATHER_MAP[today.weathercode[0]] || "不明");
+                $('#t-max').text(today.temperature_2m_max[0]);
+                $('#t-min').text(today.temperature_2m_min[0]);
+
+                // 明日のデータ表示 (配列の1番目)
+                $('#tm-condition').text(WEATHER_MAP[today.weathercode[1]] || "不明");
+                $('#tm-max').text(today.temperature_2m_max[1]);
+                $('#tm-min').text(today.temperature_2m_min[1]);
+            }
+        });
     </script>
 </body>
+
 </html>
